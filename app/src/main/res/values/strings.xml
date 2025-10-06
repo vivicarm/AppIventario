@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">My App de Inventario</string>
+    <string name="title_activity_registro">Registro</string>
+    <string name="title_activity_inicio_sesion">InicioSesionActivity</string>
+    <string name="title_activity_screm_welcome">ScremWelcomeActivity</string>
+    <string name="title_activity_agrega_producto">AgregaProductoActivity</string>
+    <string name="title_activity_listar_producto">ListarProductoActivity</string>
+    <string name="title_activity_listar_categoria">ListarCategoriaActivity</string>
+    <string name="title_activity_agregar_categoria">AgregarCategoriaActivity</string>
+</resources>

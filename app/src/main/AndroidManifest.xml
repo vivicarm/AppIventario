@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+
+    <application
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.MyAppDeInventario">
+        <activity
+            android:name=".views.AgregarCategoriaActivity"
+            android:exported="false"
+            android:label="@string/title_activity_agregar_categoria"
+            android:theme="@style/Theme.MyAppDeInventario" />
+        <activity
+            android:name=".views.ListarCategoriaActivity"
+            android:exported="false"
+            android:label="@string/title_activity_listar_categoria"
+            android:theme="@style/Theme.MyAppDeInventario" />
+        <activity
+            android:name=".views.ListarProductoActivity"
+            android:exported="false"
+            android:label="@string/title_activity_listar_producto"
+            android:theme="@style/Theme.MyAppDeInventario" />
+        <activity
+            android:name=".views.AgregaProductoActivity"
+            android:exported="false"
+            android:label="@string/title_activity_agrega_producto"
+            android:theme="@style/Theme.MyAppDeInventario" />
+        <activity
+            android:name=".views.InicioSesionActivity"
+            android:exported="true"
+            android:label="@string/title_activity_inicio_sesion"
+            android:theme="@style/Theme.MyAppDeInventario" />
+        <activity
+            android:name=".views.MainActivity"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.MyAppDeInventario" />
+        <activity
+            android:name=".views.Registro"
+            android:exported="true"
+            android:label="@string/title_activity_registro"
+            android:theme="@style/Theme.MyAppDeInventario" />
+        <activity
+            android:name=".views.AppInventario"
+            android:exported="true"
+            android:label="App Invent"
+            android:theme="@style/Theme.MyAppDeInventario">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>
