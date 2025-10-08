@@ -1,6 +1,5 @@
 package com.app.myappdeinventario.model
 
-import java.math.BigInteger
 import java.util.Date
 
 

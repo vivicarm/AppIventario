@@ -20,6 +20,12 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.MyAppDeInventario">
+
+        <activity
+            android:name=".views.IniciarSesionActivity"
+            android:exported="false"
+            android:label="@string/title_activity_iniciar_sesion"
+            android:theme="@style/Theme.MyAppDeInventario" />
         <activity
             android:name=".views.AgregarCategoriaActivity"
             android:exported="false"
@@ -41,17 +47,12 @@
             android:label="@string/title_activity_agrega_producto"
             android:theme="@style/Theme.MyAppDeInventario" />
         <activity
-            android:name=".views.InicioSesionActivity"
-            android:exported="true"
-            android:label="@string/title_activity_inicio_sesion"
-            android:theme="@style/Theme.MyAppDeInventario" />
-        <activity
             android:name=".views.MainActivity"
             android:exported="true"
             android:label="@string/app_name"
             android:theme="@style/Theme.MyAppDeInventario" />
         <activity
-            android:name=".views.Registro"
+            android:name=".views.RegistroActivity"
             android:exported="true"
             android:label="@string/title_activity_registro"
             android:theme="@style/Theme.MyAppDeInventario" />

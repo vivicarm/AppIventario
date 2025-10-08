@@ -7,4 +7,6 @@
     <string name="title_activity_listar_producto">ListarProductoActivity</string>
     <string name="title_activity_listar_categoria">ListarCategoriaActivity</string>
     <string name="title_activity_agregar_categoria">AgregarCategoriaActivity</string>
+    <string name="title_activity_iniciar_sesion">IniciarSesionActivity</string>
+    <string name="title_activity_editar_producto">EditarProductoActivity</string>
 </resources>

@@ -143,7 +143,7 @@ fun bitmapToUri(context: Context, bitmap: Bitmap): Uri {
 @Composable
 fun AddProductForm(productoViewModel: ProductoViewModel = viewModel()) {
 
-    // Ahora usamos listas
+    // listas para guardar mas de ua imagen
     var imageUris by remember { mutableStateOf<List<Uri>>(emptyList()) }
     var imageBitmaps by remember { mutableStateOf<List<Bitmap>>(emptyList()) }
 
@@ -165,7 +165,7 @@ fun AddProductForm(productoViewModel: ProductoViewModel = viewModel()) {
         }
     )
 
-    // Galería (una imagen por vez, pero puedes repetir selección)
+    // Galería
     val tomarImagenDeGaleria = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
         onResult = { uri ->

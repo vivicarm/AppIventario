@@ -2,17 +2,21 @@ package com.app.myappdeinventario.views.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val Purple80 = Color(0xFFD0BCFF)
-val PurpleGrey80 = Color(0xFFCCC2DC)
-val Pink80 = Color(0xFFEFB8C8)
+// Colores de fondo
+val verdePetróleoOscuro = Color(0xFF2D4A4A)     // Verde azulado oscuro
+val verdeSalviaClaro = Color(0xFFA8B5A8)        // Verde grisáceo claro
+val verdeMintoClaro = Color(0xFFD4DFD4)         // Verde menta muy claro/casi blanco
 
-val Purple40 = Color(0xFF6650a4)
-val PurpleGrey40 = Color(0xFF625b71)
-val Pink40 = Color(0xFF7D5260)
+// Colores de componentes
+val verdeAzuladoMedio = Color(0xFF4A7C7E)       // Verde turquesa/cerceta medio
+val blanco = Color(0xFFFFFFFF)                   // Blanco puro
 
-val backgroundColor = Color(0xFF2D4A4A) // Color de fondo principal
-val cardBackgroundStart = Color(0xFFA8B5A8) // Color inicial del degradado de la tarjeta
-val cardBackgroundEnd = Color(0xFFD4DFD4) // Color final del degradado de la tarjeta
-val buttonColor = Color(0xFF89A89D) // Color del botón
-val textColor = Color.White
-val subtitleColor = Color(0xFFE8F0E8)
+// Colores de texto
+val verdeOscuroProfundo = Color(0xFF1A3A3C)     // Verde muy oscuro/casi negro
+val semiBlanco = Color(0xD9FFFFFF) // Blanco con 85% opacidad
+val semiBlanco1= Color(0xB3FFFFFF) // Blanco con 70% opacidad
+val grisVerdoso = Color(0xFF5A6D6E)             // Gris con tono verde
+
+// Colores de acento
+val doradoSuave = Color(0xFFD4A574)             // Beige/arena/dorado claro
+val verdeAguaClaro = Color(0xFFE8F0E8)          // Verde agua muy claro
