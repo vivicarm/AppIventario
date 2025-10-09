@@ -47,6 +47,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.navigation.serialization.generateRouteWithArgs
 import com.app.myappdeinventario.R
 import com.app.myappdeinventario.viewModel.AuthUiState
 import com.app.myappdeinventario.viewModel.AuthViewModel
@@ -75,7 +76,7 @@ fun RegistroScreen(viewModel: AuthViewModel = androidx.lifecycle.viewmodel.compo
 
     var nombre by remember { mutableStateOf("") }
     var apellido by remember { mutableStateOf("") }
-    var number by remember { mutableStateOf("") }
+    var genero by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
@@ -97,7 +98,7 @@ fun RegistroScreen(viewModel: AuthViewModel = androidx.lifecycle.viewmodel.compo
             contentDescription = null,
             modifier = Modifier
                 .fillMaxWidth()
-                .fillMaxHeight(0.5f),
+                .fillMaxHeight(0.70f),
             contentScale = ContentScale.Crop
         )
 
@@ -105,7 +106,7 @@ fun RegistroScreen(viewModel: AuthViewModel = androidx.lifecycle.viewmodel.compo
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .fillMaxHeight(0.68f)
+                .fillMaxHeight(0.80f)
                 .align(Alignment.BottomCenter),
             shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
             colors = CardDefaults.cardColors(
@@ -155,6 +156,25 @@ fun RegistroScreen(viewModel: AuthViewModel = androidx.lifecycle.viewmodel.compo
                     value = apellido,
                     onValueChange = { apellido = it },
                     label = { Text("Apellido") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = verdePetróleoOscuro,
+                        unfocusedTextColor = Color.Black,
+                        focusedBorderColor = verdeAzuladoMedio,
+                        unfocusedBorderColor = Color.Gray,
+                        focusedLabelColor = verdeAzuladoMedio,
+                        unfocusedLabelColor = Color.Gray,
+                        cursorColor = verdeAzuladoMedio
+                    )
+                )
+                Spacer(modifier = Modifier.height(15.dp))
+
+                // Campo genero
+                OutlinedTextField(
+                    value = genero,
+                    onValueChange = { genero = it },
+                    label = { Text("Genero") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
@@ -229,7 +249,7 @@ fun RegistroScreen(viewModel: AuthViewModel = androidx.lifecycle.viewmodel.compo
                             emailError== null && passwordError == null &&
                             nombre.isNotBlank() && apellido.isNotBlank() &&
                             email.isNotBlank() && password.isNotBlank())
-                        { viewModel.registro(nombre, apellido, email, password) } },
+                        { viewModel.registro(nombre, apellido, genero, email, password) } },
                 ) {
                     Text("Registrarse")
                 }

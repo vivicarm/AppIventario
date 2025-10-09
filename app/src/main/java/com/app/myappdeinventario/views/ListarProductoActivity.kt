@@ -2,39 +2,39 @@ package com.app.myappdeinventario.views
 
 import android.content.Intent
 import android.os.Bundle
+import com.app.myappdeinventario.R
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.outlined.Inventory2
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.app.myappdeinventario.viewModel.ProductoViewModel
 import com.app.myappdeinventario.views.ui.theme.MyAppDeInventarioTheme
+import com.app.myappdeinventario.views.ui.theme.verdeAzuladoMedio
+import com.app.myappdeinventario.views.ui.theme.verdePetróleoOscuro
 
 class ListarProductoActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -50,85 +50,148 @@ class ListarProductoActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ListarProducto(
-    productoViewModel: ProductoViewModel = viewModel() // Inyectamos el ViewModel
-) {
-    // Estado del buscador
-    var searchText by remember { mutableStateOf("") }
+fun ListarProducto(productoViewModel: ProductoViewModel = viewModel()) {
 
     val context = LocalContext.current
-
-    // Observamos los estados del ViewModel
-    val productos by productoViewModel.productos.collectAsState()
-    val loading by productoViewModel.loading.collectAsState()
-    val error by productoViewModel.error.collectAsState()
-
-    // Llamamos a la carga de productos una sola vez
-    LaunchedEffect(Unit) {
-        productoViewModel.loadProducto()
-    }
+    val uiState by productoViewModel.productos.collectAsState()
+    var searchQuery by remember { mutableStateOf("") }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFFF5F5F5))
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // ==================== SECCIÓN DE BÚSQUEDA ====================
-        Surface(
-            modifier = Modifier.fillMaxWidth(),
-            color = Color.White,
-            shadowElevation = 2.dp
+
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(120.dp) //corto
+                .padding(top = 40.dp), // hacia abajo
+            shape = RoundedCornerShape(20.dp),
+            elevation = CardDefaults.cardElevation(8.dp)
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-            ) {
+            Box(modifier = Modifier.fillMaxSize()) {
+                Image(
+                    painter = painterResource(id = R.drawable.pantallainicio),
+                    contentDescription = "Fondo de bienvenida",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.matchParentSize()
+                )
+
+                // Contenido encima de la imagen
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(20.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Top
                 ) {
-                    OutlinedTextField(
-                        value = searchText,
-                        onValueChange = { searchText = it },
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(56.dp),
-                        placeholder = {
-                            Text("Buscar productos...", color = Color.Gray)
-                        },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.Search,
-                                contentDescription = "Buscar",
-                                tint = Color.Gray
-                            )
-                        },
-                        shape = RoundedCornerShape(12.dp),
-                        singleLine = true
+                    Text(
+                        text = "PRODUCTOS",
+                        color = Color.White,
+                        fontSize = 20.sp
                     )
 
-                    Box(
+                    IconButton(
+                        onClick = {
+                            val intent = Intent(context, AgregaProductoActivity::class.java)
+                            context.startActivity(intent)
+                        },
                         modifier = Modifier
+                            .background(
+                                verdeAzuladoMedio.copy(alpha = 0.8f),
+                                shape = CircleShape
+                            )
                             .size(40.dp)
-                            .clip(CircleShape)
-                            .background(Color(0xFF2196F3))
-                            .clickable {
-                                val intent = Intent(context, AgregaProductoActivity::class.java)
-                                context.startActivity(intent)
-                            },
-                        contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.Add,
-                            contentDescription = "Agregar producto",
+                            contentDescription = "Agregar",
                             tint = Color.White,
-                            modifier = Modifier.size(28.dp)
+                            modifier = Modifier
+                                .size(32.dp)
+                                .background(
+                                    verdeAzuladoMedio.copy(alpha = 0.8f),
+                                    shape = CircleShape
+                                )
+                                .padding(4.dp)
                         )
                     }
+
+                }
+            }
+        }
+            // barra de búsqueda
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                modifier = Modifier.fillMaxWidth(),
+                placeholder = { Text("Buscar productos...") },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = "Buscar",
+                        tint = verdeAzuladoMedio
+                    )
+                },
+                shape = RoundedCornerShape(12.dp),
+                singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = Color.Black,
+                    unfocusedTextColor = Color.Black,
+                    focusedBorderColor = verdeAzuladoMedio,
+                    unfocusedBorderColor = verdeAzuladoMedio.copy(alpha = 0.4f),
+                    cursorColor = verdeAzuladoMedio
+                )
+            )
+
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(180.dp),
+                shape = RoundedCornerShape(20.dp),
+                elevation = CardDefaults.cardElevation(8.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.White)
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(
+                            text = "Ningún producto disponnible",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = verdePetróleoOscuro
+                        )
+
+                        Button(
+                            onClick = {
+                                val intent = Intent(context, AgregaProductoActivity::class.java)
+                                context.startActivity(intent)
+                            }
+
+                        ) {
+                            Text("Agregar producto", color = Color.White)
+                        }
+                    }
+
+                    Image(
+                        painter = painterResource(id = R.drawable.inventario),
+                        contentDescription = "Imagen productos",
+                        modifier = Modifier
+                            .size(100.dp)
+                            .padding(start = 8.dp),
+                        contentScale = ContentScale.Crop
+                    )
                 }
             }
         }
     }
-}

@@ -21,7 +21,7 @@ class AuthRepository(
     }
 
     //  Registro con datos adicionales
-    suspend fun registro(nombre: String, apellido: String, email: String, password: String): Result<Unit> {
+    suspend fun registro(nombre: String, apellido: String, genero: String, email: String, password: String): Result<Unit> {
         return try {
 
             // Crea cuenta en Firebase Auth
@@ -33,6 +33,7 @@ class AuthRepository(
                 idUsuario = user.uid,
                 nombre = nombre,
                 apellido = apellido,
+                genero = genero,
                 email = email,
                 password = password
             )
@@ -42,6 +43,21 @@ class AuthRepository(
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
+        }
+    }
+
+    suspend fun obtenerUsuarioActual(): Usuario? {
+        val currentUser = firebaseAuth.currentUser ?: return null
+
+        return try {
+            val snapshot = db.collection("usuarios")
+                .document(currentUser.uid)
+                .get()
+                .await()
+
+            snapshot.toObject(Usuario::class.java)
+        } catch (e: Exception) {
+            null
         }
     }
 

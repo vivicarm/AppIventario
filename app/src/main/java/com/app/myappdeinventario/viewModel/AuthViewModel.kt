@@ -3,6 +3,7 @@ package com.app.myappdeinventario.viewModel
 import android.util.Patterns
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.app.myappdeinventario.model.Usuario
 import com.app.myappdeinventario.repository.AuthRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -13,6 +14,15 @@ class AuthViewModel(private val repository: AuthRepository = AuthRepository()): 
     private val _uiState = MutableStateFlow<AuthUiState>(AuthUiState.Idle)
     val uiState: StateFlow<AuthUiState> get() = _uiState
 
+    private val _usuarioActual = MutableStateFlow<Usuario?>(null)
+    val usuarioActual: StateFlow<Usuario?> = _usuarioActual
+
+    fun cargarUsuarioActual() {
+        viewModelScope.launch {
+            val usuario = repository.obtenerUsuarioActual()
+            _usuarioActual.value = usuario
+        }
+    }
 
     fun login(email: String, password: String) {
 
@@ -39,7 +49,7 @@ class AuthViewModel(private val repository: AuthRepository = AuthRepository()): 
         }
     }
 
-    fun registro(nombre: String, apellido: String, email: String, password: String) {
+    fun registro(nombre: String, apellido: String,genero: String, email: String, password: String) {
 
         // validaciones
 
@@ -52,7 +62,7 @@ class AuthViewModel(private val repository: AuthRepository = AuthRepository()): 
         _uiState.value = AuthUiState.Loading
         viewModelScope.launch {
             try {
-                val result = repository.registro(nombre, apellido, email, password)
+                val result = repository.registro(nombre, apellido, genero, email, password)
                 _uiState.value = if (result.isSuccess) {
                     AuthUiState.Success("Cuenta creada correctamente ✅")
                 } else {

@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -22,10 +23,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.app.myappdeinventario.R
+import com.app.myappdeinventario.viewModel.AuthViewModel
+import com.app.myappdeinventario.model.Usuario
+import com.app.myappdeinventario.views.ui.theme.verdeOscuroProfundo
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -35,48 +42,49 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-
-// PANTALLA PRINCIPAL
-// Esta es la función principal que contiene toda la estructura de la app
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen() {
+fun HomeScreen(viewModel: AuthViewModel = androidx.lifecycle.viewmodel.compose.viewModel()) {
 
+    val usuario by viewModel.usuarioActual.collectAsState()
 
+    LaunchedEffect(Unit) {
+        viewModel.cargarUsuarioActual()
+    }
 
-    // Estado del Drawer (menú lateral)
+    //estado de barra lateral
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
-    // ModalNavigationDrawer: Componente que permite el menú lateral deslizable
+    //barra lateral deslizable
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
-            DrawerContent() // Contenido del menú lateral
+            DrawerContent() // contenido barra lateral
         }
     ) {
-        // Scaffold: Estructura básica de Material Design con barra inferior
+       //barra inferior
         Scaffold(
             bottomBar = {
-                BottomNavigationBar() // Barra de navegación inferior
+                BottomNavigationBar()
             }
         ) { padding ->
-            // LazyColumn: Lista vertical con scroll que carga elementos bajo demanda
+
             LazyColumn(
                 modifier = Modifier
                     .padding(padding)
                     .fillMaxSize()
                     .background(Color.White)
             ) {
-                // Cada item{} representa una sección de la pantalla
+                // Cada item, representa una sección de la pantalla
                 item {
-                    TopAppBar() // Barra superior (Pantalla Principal + íconos)
+                    CardInicial(usuario = usuario)
                 }
                 item {
                     Spacer(modifier = Modifier.height(16.dp))
                 }
                 item {
-                    SearchBarSection() // Barra de búsqueda con ícono de lupa
+                    SearchBarSection(searchQuery = "") // Barra de búsqueda
                 }
                 item {
                     Spacer(modifier = Modifier.height(20.dp))
@@ -88,20 +96,19 @@ fun HomeScreen() {
                     Spacer(modifier = Modifier.height(20.dp))
                 }
                 item {
-                    CategoriesRow() // Fila horizontal de categorías
+                    CategoriesRow() // categorías
                 }
                 item {
                     Spacer(modifier = Modifier.height(20.dp))
                 }
                 item {
-                    ProductsGridSection() // Grid de productos (2 columnas)
+                    ProductsGridSection() // productos
                 }
             }
         }
     }
 }
 
-// CONTENIDO DEL DRAWER (MENÚ LATERAL)
 // Función que define el contenido del menú lateral deslizable
 @Composable
 fun DrawerContent() {
@@ -137,8 +144,7 @@ fun DrawerContent() {
     }
 }
 
-// ITEM DEL MENÚ LATERAL
-// Componente reutilizable para cada opción del drawer
+
 @Composable
 fun DrawerMenuItem(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
@@ -164,46 +170,82 @@ fun DrawerMenuItem(
         )
     }
 }
-
-// BARRA SUPERIOR
-// Muestra "Pantalla Principal" con ícono de ubicación y carrito
 @Composable
-fun TopAppBar() {
-    Row(
+fun CardInicial(usuario: Usuario?) {
+
+    val nombre = usuario?.nombre ?: ""
+    val genero = usuario?.genero ?: ""
+
+    val avatarRes = if (genero.lowercase() == "mujer") {
+        R.drawable.mujer
+    } else {
+        R.drawable.hombre
+    }
+
+
+    Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+            .height(200.dp)
+            .padding(horizontal = 18.dp, vertical = 8.dp),
+        shape = RoundedCornerShape(24.dp),
+        elevation = CardDefaults.cardElevation(8.dp)
     ) {
-        // Ícono de ubicación + texto
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                imageVector = Icons.Default.LocationOn,
-                contentDescription = "Ubicación",
-                modifier = Modifier.size(24.dp)
+        Box(modifier = Modifier.fillMaxSize()) {
+            Image(
+                painter = painterResource(id = R.drawable.pantallainicio),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
             )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                "Pantalla Principal",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold
-            )
-        }
 
-        // Ícono del carrito
-        Icon(
-            imageVector = Icons.Default.ShoppingCart,
-            contentDescription = "Carrito",
-            modifier = Modifier.size(28.dp)
-        )
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.25f))
+            )
+
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(
+                        text = if (genero.lowercase() == "mujer")
+                            "Bienvenida, $nombre"
+                        else
+                            "Bienvenido, ",
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        text = "Nos alegra verte de nuevo 👋",
+                        fontSize = 14.sp,
+                        color = Color.White.copy(alpha = 0.85f)
+                    )
+                }
+
+                Image(
+                    painter = painterResource(id = avatarRes),
+                    contentDescription = "Avatar usuario",
+                    modifier = Modifier
+                        .size(80.dp)
+                        .clip(RoundedCornerShape(20.dp))
+                        .border(2.dp, Color.White.copy(alpha = 0.8f), RoundedCornerShape(20.dp))
+                )
+            }
+        }
     }
 }
 
-// BARRA DE BÚSQUEDA
-// Campo de texto para búsqueda con ícono de lupa
 @Composable
-fun SearchBarSection() {
+fun SearchBarSection(searchQuery: String,) {
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -212,7 +254,7 @@ fun SearchBarSection() {
     ) {
         // Campo de búsqueda
         OutlinedTextField(
-            value = "",
+            value = searchQuery,
             onValueChange = {},
             modifier = Modifier.weight(1f),
             placeholder = { Text("Buscar...") },
@@ -226,14 +268,15 @@ fun SearchBarSection() {
             singleLine = true,
             colors = OutlinedTextFieldDefaults.colors(
                 unfocusedBorderColor = Color.LightGray,
-                focusedBorderColor = Color.Gray
+                focusedBorderColor = Color.Gray,
+                focusedLabelColor = verdeOscuroProfundo,
+                cursorColor = verdeOscuroProfundo
             )
         )
     }
 }
 
-// BANNER DE PROMOCIONES
-// Card rectangular que dice "Promociones"
+
 @Composable
 fun PromotionsBanner() {
     Card(
@@ -260,10 +303,12 @@ fun PromotionsBanner() {
     }
 }
 
-// FILA DE CATEGORÍAS
-// Muestra categorías en scroll horizontal + botón "+"
+
 @Composable
 fun CategoriesRow() {
+
+    val context = LocalContext.current
+
     Column(modifier = Modifier.padding(horizontal = 16.dp)) {
         // Título de la sección
         Row(
@@ -282,6 +327,10 @@ fun CategoriesRow() {
                 modifier = Modifier
                     .size(32.dp)
                     .clip(CircleShape)
+                    .clickable {
+                        val intent = Intent(context, ListarCategoriaActivity::class.java)
+                        context.startActivity(intent)
+                    }
                     .border(2.dp, Color.Black, CircleShape),
                 contentAlignment = Alignment.Center
             ) {
@@ -308,8 +357,6 @@ fun CategoriesRow() {
     }
 }
 
-// TARJETA DE CATEGORÍA
-// Card rectangular vacío que representa una categoría
 @Composable
 fun CategoryCard() {
     Card(
@@ -326,8 +373,6 @@ fun CategoryCard() {
     }
 }
 
-// SECCIÓN DE PRODUCTOS EN GRID
-// Muestra productos en formato de cuadrícula (2 columnas) + botón "+"
 @Composable
 fun ProductsGridSection() {
 
