@@ -14,6 +14,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -28,13 +31,17 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-
+import coil.compose.AsyncImage
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.draw.clip
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.app.myappdeinventario.model.Producto
 import com.app.myappdeinventario.viewModel.ProductoViewModel
 import com.app.myappdeinventario.views.ui.theme.MyAppDeInventarioTheme
 import com.app.myappdeinventario.views.ui.theme.verdeAzuladoMedio
 import com.app.myappdeinventario.views.ui.theme.verdePetróleoOscuro
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 
 class ListarProductoActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -123,30 +130,37 @@ fun ListarProducto(productoViewModel: ProductoViewModel = viewModel()) {
                 }
             }
         }
-            // barra de búsqueda
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = { searchQuery = it },
-                modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("Buscar productos...") },
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = "Buscar",
-                        tint = verdeAzuladoMedio
-                    )
-                },
-                shape = RoundedCornerShape(12.dp),
-                singleLine = true,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = Color.Black,
-                    unfocusedTextColor = Color.Black,
-                    focusedBorderColor = verdeAzuladoMedio,
-                    unfocusedBorderColor = verdeAzuladoMedio.copy(alpha = 0.4f),
-                    cursorColor = verdeAzuladoMedio
+        // barra de búsqueda
+        OutlinedTextField(
+            value = searchQuery,
+            onValueChange = { searchQuery = it },
+            modifier = Modifier.fillMaxWidth(),
+            placeholder = { Text("Buscar productos...") },
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Default.Search,
+                    contentDescription = "Buscar",
+                    tint = verdeAzuladoMedio
                 )
+            },
+            shape = RoundedCornerShape(12.dp),
+            singleLine = true,
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedTextColor = Color.Black,
+                unfocusedTextColor = Color.Black,
+                focusedBorderColor = verdeAzuladoMedio,
+                unfocusedBorderColor = verdeAzuladoMedio.copy(alpha = 0.4f),
+                cursorColor = verdeAzuladoMedio
             )
+        )
 
+// filtrar productos por búsqueda
+        val productosFiltrados = uiState.filter {
+            it.nombre.contains(searchQuery, ignoreCase = true)
+        }
+
+//  mostrar lista de productos o mensaje vacío
+        if (productosFiltrados.isEmpty()) {
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -166,7 +180,7 @@ fun ListarProducto(productoViewModel: ProductoViewModel = viewModel()) {
                         modifier = Modifier.weight(1f)
                     ) {
                         Text(
-                            text = "Ningún producto disponnible",
+                            text = "Ningún producto disponible",
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
                             color = verdePetróleoOscuro
@@ -177,7 +191,6 @@ fun ListarProducto(productoViewModel: ProductoViewModel = viewModel()) {
                                 val intent = Intent(context, AgregaProductoActivity::class.java)
                                 context.startActivity(intent)
                             }
-
                         ) {
                             Text("Agregar producto", color = Color.White)
                         }
@@ -193,5 +206,64 @@ fun ListarProducto(productoViewModel: ProductoViewModel = viewModel()) {
                     )
                 }
             }
+        } else {
+            // ✅ Mostrar productos en 2 columnas
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                contentPadding = PaddingValues(8.dp)
+            ) {
+                items(productosFiltrados) { producto ->
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(220.dp),
+                        shape = RoundedCornerShape(16.dp),
+                        elevation = CardDefaults.cardElevation(6.dp)
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.SpaceBetween,
+                            modifier = Modifier.padding(8.dp)
+                        ) {
+                            // Imagen del producto (usa Coil si las imágenes vienen de URL Firebase)
+                            producto.image?.let { url ->
+                                AsyncImage(
+                                    model = url,
+                                    contentDescription = "Imagen de ${producto.nombre}",
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier
+                                        .size(100.dp)
+                                        .clip(RoundedCornerShape(12.dp))
+                                )
+                            } ?: Image(
+                                painter = painterResource(id = R.drawable.inventario),
+                                contentDescription = "Imagen por defecto",
+                                modifier = Modifier
+                                    .size(100.dp)
+                                    .clip(RoundedCornerShape(12.dp)),
+                                contentScale = ContentScale.Crop
+                            )
+
+                            Text(
+                                text = producto.nombre,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp,
+                                color = verdePetróleoOscuro,
+                                modifier = Modifier.padding(top = 8.dp)
+                            )
+
+                            Text(
+                                text = "S/. ${producto.precioV}",
+                                color = verdeAzuladoMedio,
+                                fontSize = 14.sp
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
+}

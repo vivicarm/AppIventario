@@ -1,4 +1,7 @@
 package com.app.myappdeinventario.model
 
-class Especificacion {
-}
+data class Especificacion (
+
+    val idEspecificacion: String = "",
+    val nombreEspecificación: String = "",
+)

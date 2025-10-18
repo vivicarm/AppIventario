@@ -49,6 +49,8 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.app.myappdeinventario.R
+import com.app.myappdeinventario.model.Categoria
+import com.app.myappdeinventario.model.Usuario
 import com.app.myappdeinventario.viewModel.AuthUiState
 import com.app.myappdeinventario.viewModel.AuthViewModel
 import com.app.myappdeinventario.views.ui.theme.MyAppDeInventarioTheme
@@ -73,13 +75,12 @@ class IniciarSesionActivity : ComponentActivity() {
 @Composable
 fun LoginScrem(viewModel: AuthViewModel = androidx.lifecycle.viewmodel.compose.viewModel()) {
 
+    var usuario by remember { mutableStateOf(Usuario()) } // llama al model usuario
+
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
 
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
-
     var emailError by remember { mutableStateOf<String?>(null) }
     var passwordError by remember { mutableStateOf<String?>(null) }
 
@@ -129,8 +130,8 @@ fun LoginScrem(viewModel: AuthViewModel = androidx.lifecycle.viewmodel.compose.v
 
                 // Campo correo
                 OutlinedTextField(
-                    value = email,
-                    onValueChange = { email = it },
+                    value = usuario.email,
+                    onValueChange = {usuario = usuario.copy(email = it) },
                     label = { Text("Correo electrónico") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
@@ -149,8 +150,8 @@ fun LoginScrem(viewModel: AuthViewModel = androidx.lifecycle.viewmodel.compose.v
 
                 // Campo contraseña
                 OutlinedTextField(
-                    value = password,
-                    onValueChange = { password = it },
+                    value = usuario.password,
+                    onValueChange = { usuario = usuario.copy(password= it)},
                     label = { Text("Contraseña") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
@@ -185,8 +186,8 @@ fun LoginScrem(viewModel: AuthViewModel = androidx.lifecycle.viewmodel.compose.v
                 Button(
                     onClick = {
                         if (emailError== null && passwordError == null &&
-                            email.isNotBlank() && password.isNotBlank())
-                        { viewModel.login(email, password) } },
+                            usuario.email.isNotBlank() && usuario.password.isNotBlank())
+                        { viewModel.login(usuario.email, usuario.password) } },
                 ) {
                     Text("Iniciar Sesión")
                 }

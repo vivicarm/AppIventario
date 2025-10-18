@@ -12,6 +12,7 @@ data class Producto(
     val descripcion: String = "",
     val stock: Int = 0,
     val image:  List<String> = emptyList(),
-    val fechaCreacion: Date = Date()
+    val fechaCreacion: String = "",
+    val idCategory: String = ""
 
 )

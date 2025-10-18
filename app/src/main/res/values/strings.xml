@@ -9,4 +9,6 @@
     <string name="title_activity_agregar_categoria">AgregarCategoriaActivity</string>
     <string name="title_activity_iniciar_sesion">IniciarSesionActivity</string>
     <string name="title_activity_editar_producto">EditarProductoActivity</string>
+    <string name="title_activity_agregar_especificacion">AgregarEspecificacionActivity</string>
+    <string name="title_activity_agregar_variacion">AgregarVariacionActivity</string>
 </resources>
