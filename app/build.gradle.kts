@@ -56,6 +56,8 @@ dependencies {
     implementation("androidx.compose.material3:material3:1.3.0")
     implementation("androidx.compose.foundation:foundation:1.7.1")
 
+    // No need for Gson - using built-in org.json
+
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

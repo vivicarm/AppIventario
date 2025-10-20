@@ -79,6 +79,48 @@ class AuthViewModel(private val repository: AuthRepository = AuthRepository()): 
         _uiState.value = AuthUiState.Idle
     }
 
+    // Actualizar perfil de usuario
+    fun actualizarPerfil(nombre: String, email: String) {
+        if (nombre.isBlank()) {
+            _uiState.value = AuthUiState.Error("El nombre no puede estar vacío")
+            return
+        }
+
+        if (email.isBlank()) {
+            _uiState.value = AuthUiState.Error("El correo no puede estar vacío")
+            return
+        }
+
+        if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            _uiState.value = AuthUiState.Error("El correo no es válido")
+            return
+        }
+
+        _uiState.value = AuthUiState.Loading
+        viewModelScope.launch {
+            try {
+                val result = repository.actualizarPerfil(nombre, email)
+                _uiState.value = if (result.isSuccess) {
+                    // Recargar usuario actual después de actualizar
+                    cargarUsuarioActual()
+                    AuthUiState.Success("Perfil actualizado correctamente ✅")
+                } else {
+                    val message = result.exceptionOrNull()?.message ?: "Error al actualizar perfil"
+                    AuthUiState.Error(message)
+                }
+            } catch (e: Exception) {
+                _uiState.value = AuthUiState.Error("Error al actualizar perfil: ${e.message}")
+            }
+        }
+    }
+
+    // Cerrar sesión
+    fun logout() {
+        repository.logout()
+        _usuarioActual.value = null
+        _uiState.value = AuthUiState.Idle
+    }
+
     // validaciones
 
     private fun validateLoginFields(email: String, password: String): String? {

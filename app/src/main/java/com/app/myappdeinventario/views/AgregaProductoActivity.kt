@@ -6,6 +6,7 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -69,9 +70,12 @@ class AgregaProductoActivity : ComponentActivity() {
 @Composable
 fun CrearProducto(viewModel: ProductoViewModel = androidx.lifecycle.viewmodel.compose.viewModel()) {
 
-    var producto by remember { mutableStateOf(Producto()) } // llama al model categoria
+    var producto by remember { mutableStateOf(Producto()) }
     val context = LocalContext.current
     val scrollState = rememberScrollState()
+    
+    val mensaje by viewModel.mensajeEstado.collectAsState()
+    val cargando by viewModel.cargando.collectAsState()
 
     // Variables auxiliares de texto para los doubles
     var precioc by remember { mutableStateOf(producto.precioC.toString()) }
@@ -80,6 +84,21 @@ fun CrearProducto(viewModel: ProductoViewModel = androidx.lifecycle.viewmodel.co
 
     // Lista de imágenes seleccionadas
     var imageUris by remember { mutableStateOf<List<Uri>>(emptyList()) }
+
+    // Mostrar mensajes
+    LaunchedEffect(mensaje) {
+        mensaje?.let {
+            android.widget.Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+            viewModel.limpiarMensaje()
+            
+            // Si se guardó correctamente, navegar a la lista
+            if (it.contains("guardado correctamente")) {
+                val intent = Intent(context, ListarProductoActivity::class.java)
+                intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
+                context.startActivity(intent)
+            }
+        }
+    }
 
     val requestPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
@@ -384,13 +403,26 @@ fun CrearProducto(viewModel: ProductoViewModel = androidx.lifecycle.viewmodel.co
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        // botón guardar producto
-
-        Button( onClick = {
-            viewModel.agregarProductoConImagenes(context, producto, imageUris) },
-            modifier = Modifier .fillMaxWidth() .height(50.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = verdeOscuroProfundo) )
-        { Text("Guardar producto", color = Color.White, fontSize = 18.sp) }
+        // Botón guardar producto
+        Button(
+            onClick = {
+                viewModel.agregarProductoConImagenes(producto, imageUris)
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = verdeOscuroProfundo),
+            enabled = !cargando
+        ) {
+            if (cargando) {
+                CircularProgressIndicator(
+                    color = Color.White,
+                    modifier = Modifier.size(22.dp)
+                )
+            } else {
+                Text("Guardar producto", color = Color.White, fontSize = 18.sp)
+            }
+        }
 
         Spacer(modifier = Modifier.height(20.dp))
     }

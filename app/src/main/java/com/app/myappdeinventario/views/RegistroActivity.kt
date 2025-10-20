@@ -262,7 +262,7 @@ fun RegistroScreen(viewModel: AuthViewModel = androidx.lifecycle.viewmodel.compo
                         Text((uiState as AuthUiState.Success).message, color = Color.Green)
 
                         LaunchedEffect(Unit) {
-                                val intent = Intent(context, IniciarSesionActivity::class.java)
+                                val intent = Intent(context, MainActivity::class.java)
                                  context.startActivity(intent)
                         }
                     }

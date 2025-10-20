@@ -61,6 +61,30 @@ class AuthRepository(
         }
     }
 
+    // Actualizar perfil de usuario
+    suspend fun actualizarPerfil(nombre: String, email: String): Result<Unit> {
+        return try {
+            val currentUser = firebaseAuth.currentUser ?: throw Exception("No hay usuario autenticado")
+
+            // Actualizar email en Firebase Auth si cambió
+            if (currentUser.email != email) {
+                currentUser.updateEmail(email).await()
+            }
+
+            // Actualizar datos en Firestore
+            val updates = hashMapOf<String, Any>(
+                "nombre" to nombre,
+                "email" to email
+            )
+
+            db.collection("usuarios").document(currentUser.uid).update(updates).await()
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     //cerrar sesio
     fun logout() {
         firebaseAuth.signOut()

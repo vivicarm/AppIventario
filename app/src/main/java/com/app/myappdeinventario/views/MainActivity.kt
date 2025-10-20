@@ -1,5 +1,6 @@
 package com.app.myappdeinventario.views
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -27,12 +28,22 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.app.myappdeinventario.R
 import com.app.myappdeinventario.viewModel.AuthViewModel
+import com.app.myappdeinventario.viewModel.ProductoViewModel
+import com.app.myappdeinventario.viewModel.CategoriaViewModel
+import com.app.myappdeinventario.viewModel.CarritoViewModel
 import com.app.myappdeinventario.model.Usuario
+import com.app.myappdeinventario.model.Producto
+import com.app.myappdeinventario.model.Categoria
 import com.app.myappdeinventario.views.ui.theme.verdeOscuroProfundo
+import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -44,12 +55,25 @@ class MainActivity : ComponentActivity() {
 }
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(viewModel: AuthViewModel = androidx.lifecycle.viewmodel.compose.viewModel()) {
+fun HomeScreen(
+    viewModel: AuthViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
+    productoViewModel: ProductoViewModel = viewModel(),
+    categoriaViewModel: CategoriaViewModel = viewModel(),
+    carritoViewModel: CarritoViewModel = viewModel()
+) {
+    val context = LocalContext.current
 
     val usuario by viewModel.usuarioActual.collectAsState()
+    val productos by productoViewModel.productos.collectAsState()
+    val categorias by categoriaViewModel.categorias.collectAsState()
+    val cargandoProductos by productoViewModel.cargandoLista.collectAsState()
+    val cargandoCategorias by categoriaViewModel.cargandoLista.collectAsState()
+    val totalItemsCarrito by carritoViewModel.totalItems.collectAsState()
 
     LaunchedEffect(Unit) {
         viewModel.cargarUsuarioActual()
+        // Cargar carrito desde SharedPreferences
+        carritoViewModel.cargarCarritoDesdeStorage(context)
     }
 
     //estado de barra lateral
@@ -60,13 +84,13 @@ fun HomeScreen(viewModel: AuthViewModel = androidx.lifecycle.viewmodel.compose.v
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
-            DrawerContent() // contenido barra lateral
+            DrawerContent(drawerState, scope) // contenido barra lateral
         }
     ) {
        //barra inferior
         Scaffold(
             bottomBar = {
-                BottomNavigationBar()
+                BottomNavigationBar(totalItemsCarrito = totalItemsCarrito)
             }
         ) { padding ->
 
@@ -96,13 +120,17 @@ fun HomeScreen(viewModel: AuthViewModel = androidx.lifecycle.viewmodel.compose.v
                     Spacer(modifier = Modifier.height(20.dp))
                 }
                 item {
-                    CategoriesRow() // categorías
+                    CategoriesRow(categorias = categorias, cargando = cargandoCategorias) // categorías
                 }
                 item {
                     Spacer(modifier = Modifier.height(20.dp))
                 }
                 item {
-                    ProductsGridSection() // productos
+                    ProductsGridSection(
+                        productos = productos,
+                        cargando = cargandoProductos,
+                        carritoViewModel = carritoViewModel
+                    ) // productos
                 }
             }
         }
@@ -111,7 +139,9 @@ fun HomeScreen(viewModel: AuthViewModel = androidx.lifecycle.viewmodel.compose.v
 
 // Función que define el contenido del menú lateral deslizable
 @Composable
-fun DrawerContent() {
+fun DrawerContent(drawerState: DrawerState, scope: CoroutineScope) {
+    val context = LocalContext.current
+
     Column(
         modifier = Modifier
             .fillMaxHeight()
@@ -132,7 +162,16 @@ fun DrawerContent() {
         DrawerMenuItem(icon = Icons.Default.Home, text = "Inicio")
         DrawerMenuItem(icon = Icons.Default.List, text = "Categorías")
         DrawerMenuItem(icon = Icons.Default.ShoppingCart, text = "Carrito")
-        DrawerMenuItem(icon = Icons.Default.Person, text = "Perfil")
+        DrawerMenuItem(
+            icon = Icons.Default.Person,
+            text = "Perfil",
+            onClick = {
+                val intent = Intent(context, PerfilActivity::class.java)
+                context.startActivity(intent)
+                scope.launch { drawerState.close() }
+                (context as MainActivity).finish()
+            }
+        )
 
         Spacer(modifier = Modifier.weight(1f))
 
@@ -149,11 +188,13 @@ fun DrawerContent() {
 fun DrawerMenuItem(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     text: String,
-    textColor: Color = Color.Black
+    textColor: Color = Color.Black,
+    onClick: (() -> Unit)? = null
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable { onClick?.invoke() }
             .padding(vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -305,7 +346,7 @@ fun PromotionsBanner() {
 
 
 @Composable
-fun CategoriesRow() {
+fun CategoriesRow(categorias: List<Categoria>, cargando: Boolean) {
 
     val context = LocalContext.current
 
@@ -349,16 +390,70 @@ fun CategoriesRow() {
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // items() permite crear múltiples elementos de forma dinámica
-            items(4) { index ->
-                CategoryCard()
+            if (cargando) {
+                items(4) {
+                    CategoryCardSkeleton()
+                }
+            } else if (categorias.isEmpty()) {
+                item {
+                    Text(
+                        "No hay categorías disponibles",
+                        color = Color.Gray,
+                        modifier = Modifier.padding(16.dp)
+                    )
+                }
+            } else {
+                items(count = categorias.size) { index ->
+                    CategoryCard(categorias[index])
+                }
             }
         }
     }
 }
 
 @Composable
-fun CategoryCard() {
+fun CategoryCard(categoria: Categoria) {
+    Card(
+        modifier = Modifier
+            .width(120.dp)
+            .height(80.dp),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.White
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            AsyncImage(
+                model = categoria.imagenCategoria,
+                contentDescription = categoria.nombreCategory,
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(8.dp)),
+                contentScale = ContentScale.Crop,
+                placeholder = painterResource(id = R.drawable.category),
+                error = painterResource(id = R.drawable.category)
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Text(
+                text = categoria.nombreCategory,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Medium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+    }
+}
+
+@Composable
+fun CategoryCardSkeleton() {
     Card(
         modifier = Modifier
             .width(120.dp)
@@ -369,12 +464,32 @@ fun CategoryCard() {
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Box(modifier = Modifier.fillMaxSize())
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(Color(0xFFE0E0E0))
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Box(
+                modifier = Modifier
+                    .width(80.dp)
+                    .height(12.dp)
+                    .background(Color(0xFFE0E0E0), RoundedCornerShape(4.dp))
+            )
+        }
     }
 }
 
 @Composable
-fun ProductsGridSection() {
+fun ProductsGridSection(productos: List<Producto>, cargando: Boolean, carritoViewModel: CarritoViewModel) {
 
     val context = LocalContext.current
 
@@ -421,9 +536,22 @@ fun ProductsGridSection() {
             verticalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier.height(400.dp) // Altura fija para el grid
         ) {
-            // items() crea 4 tarjetas de productos
-            items(4) { index ->
-                ProductCard()
+            if (cargando) {
+                items(4) {
+                    ProductCardSkeleton()
+                }
+            } else if (productos.isEmpty()) {
+                item {
+                    Text(
+                        "No hay productos disponibles",
+                        color = Color.Gray,
+                        modifier = Modifier.padding(16.dp)
+                    )
+                }
+            } else {
+                items(count = productos.size) { index ->
+                    ProductCard(productos[index], carritoViewModel, context)
+                }
             }
         }
     }
@@ -432,7 +560,140 @@ fun ProductsGridSection() {
 // TARJETA DE PRODUCTO
 // Card cuadrado que representa un producto individual
 @Composable
-fun ProductCard() {
+fun ProductCard(producto: Producto, carritoViewModel: CarritoViewModel, context: Context) {
+    val estaEnCarrito = carritoViewModel.estaEnCarrito(producto.idProduct)
+    val cantidadEnCarrito = carritoViewModel.obtenerCantidad(producto.idProduct)
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .aspectRatio(1f), // Mantiene proporción cuadrada (1:1)
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.White
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            // Imagen del producto
+            AsyncImage(
+                model = producto.image.firstOrNull(),
+                contentDescription = producto.nombre,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(0.6f)
+                    .clip(RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)),
+                contentScale = ContentScale.Crop,
+                placeholder = painterResource(id = R.drawable.inventario),
+                error = painterResource(id = R.drawable.inventario)
+            )
+
+            // Información del producto
+            Column(
+                modifier = Modifier
+                    .weight(0.4f)
+                    .padding(8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = producto.nombre,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+
+                    Text(
+                        text = "S/. ${String.format("%.2f", producto.precioV)}",
+                        fontSize = 12.sp,
+                        color = verdeOscuroProfundo,
+                        fontWeight = FontWeight.Medium
+                    )
+
+                    Text(
+                        text = "Stock: ${producto.stock}",
+                        fontSize = 10.sp,
+                        color = Color.Gray
+                    )
+                }
+
+                // Botón de agregar al carrito
+                if (estaEnCarrito) {
+                    // Si está en carrito, mostrar controles de cantidad
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        IconButton(
+                            onClick = {
+                                carritoViewModel.actualizarCantidad(producto.idProduct, cantidadEnCarrito - 1, context)
+                            },
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Remove,
+                                contentDescription = "Disminuir cantidad",
+                                tint = Color.Red,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+
+                        Text(
+                            text = cantidadEnCarrito.toString(),
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+
+                        IconButton(
+                            onClick = {
+                                if (cantidadEnCarrito < producto.stock) {
+                                    carritoViewModel.actualizarCantidad(producto.idProduct, cantidadEnCarrito + 1, context)
+                                }
+                            },
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = "Aumentar cantidad",
+                                tint = verdeOscuroProfundo,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    }
+                } else {
+                    // Si no está en carrito, mostrar botón de agregar
+                    Button(
+                        onClick = {
+                            carritoViewModel.agregarProducto(producto, 1, context)
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = verdeOscuroProfundo
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.AddShoppingCart,
+                            contentDescription = "Agregar al carrito",
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Agregar", fontSize = 12.sp)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ProductCardSkeleton() {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -443,21 +704,69 @@ fun ProductCard() {
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Box(modifier = Modifier.fillMaxSize())
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            // Skeleton Image
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(0.7f)
+                    .background(Color(0xFFE0E0E0))
+            )
+
+            // Skeleton Info
+            Column(
+                modifier = Modifier
+                    .weight(0.3f)
+                    .padding(8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Box(
+                    modifier = Modifier
+                        .width(100.dp)
+                        .height(14.dp)
+                        .background(Color(0xFFE0E0E0), RoundedCornerShape(4.dp))
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Box(
+                    modifier = Modifier
+                        .width(60.dp)
+                        .height(12.dp)
+                        .background(Color(0xFFE0E0E0), RoundedCornerShape(4.dp))
+                )
+
+                Spacer(modifier = Modifier.height(2.dp))
+
+                Box(
+                    modifier = Modifier
+                        .width(50.dp)
+                        .height(10.dp)
+                        .background(Color(0xFFE0E0E0), RoundedCornerShape(4.dp))
+                )
+            }
+        }
     }
 }
 
 // BARRA DE NAVEGACIÓN INFERIOR
 // Muestra 4 íconos en la parte inferior de la pantalla
 @Composable
-fun BottomNavigationBar() {
+fun BottomNavigationBar(totalItemsCarrito: Int) {
+    val context = LocalContext.current
+
     NavigationBar(
         containerColor = Color.White,
         tonalElevation = 8.dp
     ) {
         // Ícono: Casa/Inicio
         NavigationBarItem(
-            selected = false,
+            selected = true,
             onClick = { },
             icon = {
                 Icon(
@@ -470,11 +779,15 @@ fun BottomNavigationBar() {
         // Ícono: Cliente/Usuario
         NavigationBarItem(
             selected = false,
-            onClick = { },
+            onClick = {
+                val intent = Intent(context, PerfilActivity::class.java)
+                context.startActivity(intent)
+                (context as MainActivity).finish()
+            },
             icon = {
                 Icon(
                     imageVector = Icons.Default.Person,
-                    contentDescription = "Cliente"
+                    contentDescription = "Perfil"
                 )
             }
         )
@@ -482,12 +795,28 @@ fun BottomNavigationBar() {
         // Ícono: Carrito de compras
         NavigationBarItem(
             selected = false,
-            onClick = { },
+            onClick = {
+                val intent = Intent(context, CarritoActivity::class.java)
+                context.startActivity(intent)
+            },
             icon = {
-                Icon(
-                    imageVector = Icons.Default.ShoppingCart,
-                    contentDescription = "Carrito"
-                )
+                BadgedBox(
+                    badge = {
+                        if (totalItemsCarrito > 0) {
+                            Badge {
+                                Text(
+                                    text = totalItemsCarrito.toString(),
+                                    fontSize = 10.sp
+                                )
+                            }
+                        }
+                    }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ShoppingCart,
+                        contentDescription = "Carrito"
+                    )
+                }
             }
         )
 
